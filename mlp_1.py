@@ -11,6 +11,7 @@ test_data = datasets.MNIST(root="data", train=False, download=True, transform=tr
 train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
 test_loader = DataLoader(test_data, batch_size=64)
 
+# on gpu
 device = torch.device("cuda:0")
 
 for X,y in test_loader:
@@ -70,16 +71,18 @@ def test(dataloader, model, loss_fun):
     correct /= size
     print(f"test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:8f} \n")
 
-epochs = 2
+epochs = 5
 
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_loader, model, loss_fn, optimizer)
     test(test_loader, model, loss_fn)
 print("Done")
+
 print("-"*25)
 classes = test_data.classes
 
+# making on prediction
 model.eval()
 x, y = test_data[0][0], test_data[0][1]
 with torch.no_grad():
@@ -89,7 +92,6 @@ with torch.no_grad():
     print(f'Predicted: "{predicted}", Actual "{actual}"')
 
 
-print(test_data.data.shape)
 # batching all the predictions
 y_true, y_pred = [], []
 model.eval()
