@@ -1,5 +1,3 @@
-# tutorial based on 
-# https://docs.pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html#working-with-data
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -12,9 +10,8 @@ train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
 test_loader = DataLoader(test_data, batch_size=64)
 # Set device to 'cuda' if available, otherwise 'cpu'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 print(f"Using device: {device}")
-
+print(train_data.data.shape)
 for X,y in test_loader:
     print(f"shape of X : {X.shape}")
     print(f"shape of y : {y.shape} {y.dtype}")
@@ -25,15 +22,16 @@ class MLP(nn.Module):
         super().__init__()
         self.layers = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(28*28, 128),
+            nn.Linear(32*32*3, 64),
             nn.ReLU(),
-            nn.Linear(128, 10)
+            nn.Linear(64, 10)
         )
     def forward(self, x):
         return self.layers(x)
 
 model = MLP().to(device)
 print(model)
+print(model.parameters())
 
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
@@ -79,31 +77,3 @@ for t in range(epochs):
     train(train_loader, model, loss_fn, optimizer)
     test(test_loader, model, loss_fn)
 print("Done")
-
-print("-"*25)
-classes = test_data.classes
-
-# making on prediction
-model.eval()
-x, y = test_data[0][0], test_data[0][1]
-with torch.no_grad():
-    x = x.to(device)
-    pred = model(x)
-    predicted, actual = classes[pred[0].argmax(0)], classes[y]
-    print(f'Predicted: "{predicted}", Actual "{actual}"')
-
-
-# batching all the predictions
-y_true, y_pred = [], []
-model.eval()
-with torch.no_grad():
-    for X, y in test_loader:
-        X = X.to(device)
-        outputs = model(X)
-        preds = torch.argmax(outputs,1)
-        y_true.extend(y.cpu().numpy())
-        y_pred.extend(preds.cpu().numpy())
-
-cm = confusion_matrix(y_true,y_pred)
-print(f"Confusion Matrix after {epochs} epochs \n {cm}")
-
