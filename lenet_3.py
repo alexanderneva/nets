@@ -1,5 +1,6 @@
 # https://d2l.ai/chapter_convolutional-neural-networks/lenet.html
-# vanishing gradient
+# https://docs.pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+# doing relu
 import torch
 from torch import nn
 
@@ -19,14 +20,14 @@ class LeNet(nn.Module):
         super().__init__()
         self.net = nn.Sequential(
             nn.LazyConv2d(6,kernel_size=5,padding=2),
-            nn.Sigmoid(),
+            nn.ReLU(),
             nn.AvgPool2d(kernel_size=2,stride=2),
             nn.LazyConv2d(16, kernel_size=5),
-            nn.Sigmoid(),
+            nn.ReLU(),
             nn.AvgPool2d(kernel_size=2,stride=2),
             nn.Flatten(),
-            nn.LazyLinear(120), nn.Sigmoid(),
-            nn.LazyLinear(84), nn.Sigmoid(),
+            nn.LazyLinear(120), nn.ReLU(),
+            nn.LazyLinear(84), nn.ReLU(),
             nn.LazyLinear(10),
         )
 
@@ -121,10 +122,69 @@ def test(dataloader, model, loss_fun):
     correct /= size
     print(f"test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:8f} \n")
 
-epochs = 5
 
-for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    train(train_loader, model, loss_fn, optimizer)
-    test(test_loader, model, loss_fn)
-print("Done")
+# saving the model
+import os
+PATH = './mnist_lenet'
+if os.path.exists(PATH):
+    print(f'Weights saved at {PATH}. Loading model..')
+    model.load_state_dict(torch.load(PATH))
+else:
+    loss_fn = nn.CrossEntropyLoss()
+    #loss_fn = nn.MSELoss()
+    test_im = torch.randn(1,1,28,28)
+    test_im = test_im.to(device)
+    print(model(test_im).argmax(1))
+    optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
+    print(f'No saved weights found at {PATH}. Training now')
+    epochs = 5
+
+    for t in range(epochs):
+        print(f"Epoch {t+1}\n-------------------------------")
+        train(train_loader, model, loss_fn, optimizer)
+        test(test_loader, model, loss_fn)
+    print("Done")
+    torch.save(model.state_dict(), PATH)
+
+
+
+
+print("-"*25)
+classes = test_data.classes
+
+iteration = iter(test_loader)
+images, labels = next(iteration)
+images, labels = images.to(device), labels.to(device)
+out = model(images)
+
+_, pred = torch.max(out,1)
+print('predicted: ', ' '.join(f'{classes[pred[j]]:5s}' for j in range(4)))
+
+correct_pred = {classname: 0 for classname in classes}
+total_pred = {classname: 0 for classname in classes}
+
+with torch.no_grad():
+    for data in test_loader:
+        images, labels = data
+        images, labels = images.to(device), labels.to(device)
+        outs = model(images)
+        _, predictions = torch.max(outs,1)
+        for label, prediction in zip(labels,predictions):
+            if label==prediction:
+                correct_pred[classes[label]] += 1
+            total_pred[classes[label]] += 1
+
+# acc for each count
+for classname, correct_count in correct_pred.items():
+    accuracy = 100 * float(correct_count) / total_pred[classname]
+    print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
+# making on prediction
+#model.eval()
+#x, y = test_data[0][0], test_data[0][1]
+#with torch.no_grad():
+#    x = x.to(device)
+#    pred = model(x)
+#    predicted, actual = classes[pred[0].argmax(1)], classes[y]
+#    print(f'Predicted: "{predicted}", Actual "{actual}"')
+#
+#
