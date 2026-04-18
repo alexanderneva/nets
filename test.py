@@ -34,7 +34,7 @@ print(model)
 print(model.parameters())
 
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-3,momentum=0.9)
 
 
 def train(dataloader, model, loss_fun, optimizer):
@@ -45,7 +45,8 @@ def train(dataloader, model, loss_fun, optimizer):
         X, y = X.to(device), y.to(device)
 
         pred = model(X)
-        loss = loss_fn(pred,y)
+        pred_prob = nn.Softmax(dim=1)(pred)
+        loss = loss_fn(pred_prob,y)
 
         #Backprop
         loss.backward()
@@ -64,8 +65,9 @@ def test(dataloader, model, loss_fun):
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X)
+            pred_prob = nn.Softmax(dim=1)(pred)
             test_loss += loss_fun(pred, y).item()
-            correct += (pred.argmax(1)==y).type(torch.float).sum().item()
+            correct += (pred_prob.argmax(1)==y).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
     print(f"test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:8f} \n")

@@ -11,8 +11,10 @@ test_data = datasets.MNIST(root="data", train=False, download=True, transform=tr
 train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
 test_loader = DataLoader(test_data, batch_size=64)
 
-# on gpu
-device = torch.device("cuda:0")
+# Set device to 'cuda' if available, otherwise 'cpu'
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+print(f"Using device: {device}")
 
 for X,y in test_loader:
     print(f"shape of X : {X.shape}")
@@ -35,7 +37,7 @@ model = MLP().to(device)
 print(model)
 
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
 
 
 def train(dataloader, model, loss_fun, optimizer):

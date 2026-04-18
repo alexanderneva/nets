@@ -8,6 +8,19 @@ from sklearn.metrics import confusion_matrix
 # Load CIFAR10
 train_data = datasets.CIFAR10(root="data", train=True, download=True, transform=transforms.ToTensor())
 test_data = datasets.CIFAR10(root="data", train=False, download=True, transform=transforms.ToTensor())
+
+raw_data = train_data.data
+raw_data.shape
+mean = raw_data.mean(axis=(0,1,2)) / 255.
+std = raw_data.std(axis=(0, 1, 2)) / 255.
+# normalizing tranformation
+transform = transforms.Compose([
+                               transforms.ToTensor(),
+                               transforms.Normalize(mean=mean, std=std)
+])
+
+train_data = datasets.CIFAR10(root="data", train=True, download=True, transform=transform)
+test_data = datasets.CIFAR10(root="data", train=False, download=True, transform=transform)
 train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
 test_loader = DataLoader(test_data, batch_size=64)
 # Set device to 'cuda' if available, otherwise 'cpu'
@@ -25,7 +38,7 @@ class MLP(nn.Module):
         super().__init__()
         self.layers = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(28*28, 128),
+            nn.Linear(32*32*3, 128),
             nn.ReLU(),
             nn.Linear(128, 10)
         )
@@ -84,26 +97,26 @@ print("-"*25)
 classes = test_data.classes
 
 # making on prediction
-model.eval()
-x, y = test_data[0][0], test_data[0][1]
-with torch.no_grad():
-    x = x.to(device)
-    pred = model(x)
-    predicted, actual = classes[pred[0].argmax(0)], classes[y]
-    print(f'Predicted: "{predicted}", Actual "{actual}"')
-
-
-# batching all the predictions
-y_true, y_pred = [], []
-model.eval()
-with torch.no_grad():
-    for X, y in test_loader:
-        X = X.to(device)
-        outputs = model(X)
-        preds = torch.argmax(outputs,1)
-        y_true.extend(y.cpu().numpy())
-        y_pred.extend(preds.cpu().numpy())
-
-cm = confusion_matrix(y_true,y_pred)
-print(f"Confusion Matrix after {epochs} epochs \n {cm}")
-
+#model.eval()
+#x, y = test_data[0], test_data[0]
+#with torch.no_grad():
+#    x = x.to(device)
+#    pred = model(x)
+#    predicted, actual = classes[pred[0].argmax(0)], classes[y]
+#    print(f'Predicted: "{predicted}", Actual "{actual}"')
+#
+#
+## batching all the predictions
+#y_true, y_pred = [], []
+#model.eval()
+#with torch.no_grad():
+#    for X, y in test_loader:
+#        X = X.to(device)
+#        outputs = model(X)
+#        preds = torch.argmax(outputs,1)
+#        y_true.extend(y.cpu().numpy())
+#        y_pred.extend(preds.cpu().numpy())
+#
+#cm = confusion_matrix(y_true,y_pred)
+#print(f"Confusion Matrix after {epochs} epochs \n {cm}")
+#
