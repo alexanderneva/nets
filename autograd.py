@@ -110,5 +110,35 @@ print(f'df/dx at {w.data.item()}, {x.data.item()}, {y.data.item()}, {z.data.item
 print(f'df/dy at {w.data.item()}, {x.data.item()}, {y.data.item()}, {z.data.item()} is {y.grad.data.item()}')
 print(f'df/dz at {w.data.item()}, {x.data.item()}, {y.data.item()}, {z.data.item()} is {z.grad.data.item()}')
 
+# https://docs.pytorch.org/tutorials/beginner/basics/autogradqs_tutorial.html
+
+x = torch.ones(5)
+y = torch.zeros(3)
+w = torch.randn(5, 3, requires_grad=True)
+b = torch.randn(3, requires_grad=True)
+z = torch.matmul(x, w)+b
+loss = torch.nn.functional.binary_cross_entropy_with_logits(z,y)
+print(f'Loss {loss}')
+print(f'Gradient for z = {z.grad_fn}')
+print(f'Gradient for loss = {loss.grad_fn}')
+loss.backward()
+print(f'Gradient at w {w.grad}')
+print(f'Gradient at b {b.grad}')
+print("Detaching gardient from z")
+z_det = z.detach()
+print(z_det.requires_grad)
+
+# jacobian product
+# v^TJ
+inp = torch.eye(4,5,requires_grad=True)
+out = (inp+1).pow(2).t()
+out.backward(torch.ones_like(out),retain_graph=True)
+print(f"First call \n{inp.grad}")
+out.backward(torch.ones_like(out),retain_graph=True)
+print(f"Second call \n {inp.grad}")
+inp.grad.zero_()
+out.backward(torch.ones_like(out),retain_graph=True)
+print(f"\n Call after zeroing \n {inp.grad}")
+
 
 
