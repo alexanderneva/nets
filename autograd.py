@@ -140,5 +140,38 @@ inp.grad.zero_()
 out.backward(torch.ones_like(out),retain_graph=True)
 print(f"\n Call after zeroing \n {inp.grad}")
 
+#https://docs.pytorch.org/tutorials/beginner/understanding_leaf_vs_nonleaf_tutorial.html
+import torch.nn.functional as F
+x = torch.ones(1,3)
+W = torch.ones(3,2, requires_grad=True)
+b = torch.ones(1,2,requires_grad=True)
+y = torch.ones(1,2)
 
+# forward
+z = (x @ W) + b
+y_pred = F.relu(z)
+loss = F.mse_loss(y_pred, y)
+print(f"x is leaf? {x.is_leaf=}")
+print(f"z is leaf? {z.is_leaf=}")
+loss.backward()
+print(f"W {W} and W gradient \n {W.grad}")
+print(f"b {b} and b gradient {b.grad}")
 
+z = (x @ W) + b
+y_pred = F.relu(z)
+loss = F.mse_loss(y_pred, y)
+
+# retain grad
+z.retain_grad()
+y_pred.retain_grad()
+loss.retain_grad()
+
+W.grad = None
+b.grad = None
+
+loss.backward()
+print(f"W {W} and W gradient \n {W.grad}")
+print(f"b {b} and b gradient \n {b.grad}")
+print(f"b {z} and b gradient \n {z.grad}")
+print(f"b {y} and b gradient \n {y.grad}")
+print(f"b {loss} and b gradient \n {loss.grad}")
