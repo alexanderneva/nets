@@ -42,7 +42,8 @@ transform = transforms.Compose([
 ])
 
 dataset = torchvision.datasets.CIFAR10(root="data/",train=True,download=False,transform=transform)
-image, label = dataset[37]
+image_no = 37
+image, label = dataset[image_no]
 x_0 = image.unsqueeze(0)
 print(f"Returning the batch dimension {x_0.shape}")
 
@@ -74,8 +75,10 @@ for i, img, in enumerate(noisy_images):
     axes[i].imshow(img)
     axes[i].set_title(f"Step {timesteps[i]}")
     axes[i].axis('off')
+    fig.suptitle(f'Forward diffusion on image {image_no}')
 
 plt.savefig('forward_diff_cifar10.png',bbox_inches='tight',dpi=300)
+print('Image saved')
 
 
 
