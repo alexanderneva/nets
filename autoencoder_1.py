@@ -54,3 +54,37 @@ class Autoencoder(nn.Module):
 model = Autoencoder()
 print(model.parameters)
 
+class UNet_1(nn.Module):
+    def __init__(self):
+        super().__init__()
+        ### Down block (Conv + ReLU)
+        self.down_block_1 = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3,stride=2,padding=1),
+            nn.ReLU()
+        )
+        self.down_block_2 = nn.Sequential(
+            nn.Conv2d(16,32,kernel_size=3, stride=2, padding=1),
+            nn.ReLU()
+        )
+        self.up_block_1 = nn.Sequential(
+            nn.ConvTranspose2d(32,16,kernel_size=2,stride=2),
+            nn.ReLU()
+        )
+
+        self.up_block_2 = nn.Sequential(
+            nn.ConvTranspose2d(16,3,kernel_size=2,stride=2),
+            nn.Sigmoid()
+        )
+        self.blender = nn.Sequential(
+            nn.Conv2d(32,16,kernel_size=3,stride=1,padding=1),
+            nn.ReLU()
+        )
+    def forward(self, x):
+        # skip connection features
+        skip_1 = self.down_block_1(x)
+        bottleneck = self.down_block_2(skip_1)
+        reconstruct_1 = self.up_block_1(bottleneck)
+        concat = torch.cat((skip_1,reconstruct_1),dim=1)
+        blended = self.blender(concat)
+        reconstruct = self.up_block_2(blended)
+        return reconstruct

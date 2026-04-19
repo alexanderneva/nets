@@ -83,13 +83,45 @@ print('Image saved')
 
 
 print('Loading the autoencoder to train')
-from autoencoder_1 import Autoencoder
+from autoencoder_1 import Autoencoder, UNet_1
 import torch.optim as optim
 
-model = Autoencoder().to(device)
-print(model)
-
+#model = Autoencoder().to(device)
+#print(model)
+#
 trainloader = torch.utils.data.DataLoader(dataset,batch_size=64,shuffle=True)
+#
+#### loss and optim
+#
+#criterion = nn.MSELoss()
+#optimizer = optim.Adam(model.parameters(),lr=0.001)
+#
+#epochs = 3
+#print(f"Training on {device}")
+#
+#for epoch in range(epochs):
+#    running_loss = 0.
+#    for i, data in enumerate(trainloader,0):
+#        #ignore labels
+#        inputs, _ = data
+#        inputs = inputs.to(device)
+#        optimizer.zero_grad()
+#
+#        #forward
+#        outputs = model(inputs)
+#        # loss
+#        loss = criterion(outputs, inputs)
+#        loss.backward()
+#        # update model
+#        optimizer.step()
+#        running_loss += loss.item()
+#        if i%200 == 199:
+#            print(f'[Epoch {epoch+1}, Batch {i + 1:4d}] MSE Loss: {running_loss / 200:.4f}')
+#            running_loss =0.0
+#    print('Finished!')
+
+model = UNet_1().to(device)
+print(f"Loaded {model}")
 
 ### loss and optim
 
@@ -119,4 +151,3 @@ for epoch in range(epochs):
             print(f'[Epoch {epoch+1}, Batch {i + 1:4d}] MSE Loss: {running_loss / 200:.4f}')
             running_loss =0.0
     print('Finished!')
-
