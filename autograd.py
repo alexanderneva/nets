@@ -175,3 +175,44 @@ print(f"b {b} and b gradient \n {b.grad}")
 print(f"b {z} and b gradient \n {z.grad}")
 print(f"b {y} and b gradient \n {y.grad}")
 print(f"b {loss} and b gradient \n {loss.grad}")
+
+
+
+### adding logistic loss problem
+### number of observations n, 
+### number of features p
+criterion = torch.nn.functional.binary_cross_entropy
+n = 100
+p = 20
+
+X = torch.tensor(torch.rand(n,p))
+theta = torch.randn(p,1,requires_grad=True)
+z = X@theta
+print(f"Shape of X: {X.shape}")
+print(f'Shape of Xtheta: {(X@theta).shape}')
+sigmoid = nn.Sigmoid()
+h_theta_X = sigmoid(X@theta)
+print(f"Shape of sigm(Xtheta) {h_theta_X}")
+
+### dummy target
+y = torch.randint(0,2,(n,1)).float()
+#print(f"Loss between dummy and model is {loss}")
+#loss.backward()
+#print(f"The gradient of the loss w.r.t theta {theta.grad}")
+def h_theta_X(theta):
+    return sigmoid(X@theta)
+
+print(f"theta {theta}")
+lr = 0.01
+Nsteps = 100
+for step in range(Nsteps):
+    theta = torch.randn(p,1,requires_grad=True)
+    z = X@theta
+    h_theta_X = sigmoid(z)
+    loss = criterion(h_theta_X,y)
+    loss.backward()
+    with torch.no_grad():
+        theta -= lr*theta.grad
+        theta.grad.zero_()
+
+print(f"Params after {Nsteps} {theta}")
