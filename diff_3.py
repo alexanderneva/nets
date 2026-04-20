@@ -119,39 +119,39 @@ import torch.optim as optim
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(),lr=0.001)
 
-epochs = 10
-#print(f"Training on {device}")
-#
-#for epoch in range(epochs):
-#    running_loss = 0.
-#    for i, (images, _) in enumerate(train_loader,0):
-#        images = images.to(device)
-#        batch_size = images.shape[0]
-#        ### adding time at each batch member
-#        t = torch.randint(0,timesteps,(batch_size,),device=images.device).long()
-#        ### making noise
-#        noise = torch.randn_like(images)
-#        x_t=q_sample(images,t,noise=noise)
-#
-#        optimizer.zero_grad()
-#        #forward
-#        outputs = model(x_t,t)
-#        # loss
-#        loss = criterion(outputs, noise)
-#        loss.backward()
-#        # update model
-#        optimizer.step()
-#        running_loss += loss.item()
-#        if i%200 == 199:
-#            print(f'[Epoch {epoch+1}, Batch {i + 1:4d}] MSE Loss: {running_loss / 200:.4f}')
-#            running_loss =0.0
-#    print('Finished!')
-#
-#torch.save(model.state_dict(),"model_weights/diff_3_10.pt")
+epochs = 50
+print(f"Training on {device}")
+
+for epoch in range(epochs):
+    running_loss = 0.
+    for i, (images, _) in enumerate(train_loader,0):
+        images = images.to(device)
+        batch_size = images.shape[0]
+        ### adding time at each batch member
+        t = torch.randint(0,timesteps,(batch_size,),device=images.device).long()
+        ### making noise
+        noise = torch.randn_like(images)
+        x_t=q_sample(images,t,noise=noise)
+
+        optimizer.zero_grad()
+        #forward
+        outputs = model(x_t,t)
+        # loss
+        loss = criterion(outputs, noise)
+        loss.backward()
+        # update model
+        optimizer.step()
+        running_loss += loss.item()
+        if i%200 == 199:
+            print(f'[Epoch {epoch+1}, Batch {i + 1:4d}] MSE Loss: {running_loss / 200:.4f}')
+            running_loss =0.0
+    print('Finished!')
+
+torch.save(model.state_dict(),"model_weights/diff_3_50.pt")
 ## reverse process
 model = DiffUNet().to(device)
 print("Loading model")
-model.load_state_dict(torch.load("model_weights/diff_3_10.pt",weights_only=True))
+model.load_state_dict(torch.load("model_weights/diff_3_50.pt",weights_only=True))
 print(model)
 #dataset.data
 images, labels = next(iter(train_loader))
@@ -227,5 +227,5 @@ for i, img_tensor in enumerate(test_images):
     axes[i].axis('off') # Hides the messy coordinates
     fig.suptitle(f'Reverse Diffusion after {epochs} epochs ')
 plt.tight_layout
-plt.savefig('images/reverse_diff_10.png',bbox_inches='tight',dpi=150)
+plt.savefig('images/reverse_diff_50.png',bbox_inches='tight',dpi=150)
 plt.show()
