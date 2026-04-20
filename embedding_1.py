@@ -28,30 +28,30 @@ print(embeddings)
 print(embeddings.shape)
 
 #### plotting embeddings
-#import matplotlib.pyplot as plt
-#embeddings_np = embeddings.numpy()
-#plt.figure(figsize=(12,6))
-#for i,t in enumerate(time):
-#    plt.plot(embeddings_np[i], label =f"t = {t.item()}",alpha=0.8)
-#plt.title("Sinusoidal embeddings on 256 dimensions")
-#plt.xlabel("embedding dimension")
-#plt.ylabel("Between -1. 1.")
-#plt.legend(loc="upper right")
-#plt.grid(True,alpha=0.3)
-#plt.show()
-#plt.savefig("embeddings_squish.png",dpi=300)
-#
-#fig, axs = plt.subplots(nrows=4,ncols=1,figsize=(12,10),sharex=True,sharey=True)
-#colours = ["red","blue","green","orange"]
-#for i, (t, ax) in enumerate(zip(time,axs)):
-#    ax.plot(embeddings_np[i],color=colours[i],alpha=0.9)
-#    ax.set_title(f"Time step t = {t.item()}",fontsize=11,loc='left')
-#    ax.grid(True,alpha=0.3)
-#    ax.set_ylabel("Value")
-#axs[-1].set_xlabel(f"Embedding dim {embeddings.dim}",fontsize=11)
-#plt.tight_layout()
-#plt.show()
-#plt.savefig('embeddings_stacked.png',dpi=300)
+import matplotlib.pyplot as plt
+embeddings_np = embeddings.numpy()
+plt.figure(figsize=(12,6))
+for i,t in enumerate(time):
+    plt.plot(embeddings_np[i], label =f"t = {t.item()}",alpha=0.8)
+plt.title("Sinusoidal embeddings on 256 dimensions")
+plt.xlabel("embedding dimension")
+plt.ylabel("Between -1. 1.")
+plt.legend(loc="upper right")
+plt.grid(True,alpha=0.3)
+plt.savefig("images/embeddings_squish.png",dpi=150)
+plt.show()
+
+fig, axs = plt.subplots(nrows=4,ncols=1,figsize=(12,10),sharex=True,sharey=True)
+colours = ["red","blue","green","orange"]
+for i, (t, ax) in enumerate(zip(time,axs)):
+    ax.plot(embeddings_np[i],color=colours[i],alpha=0.9)
+    ax.set_title(f"Time step t = {t.item()}",fontsize=11,loc='left')
+    ax.grid(True,alpha=0.3)
+    ax.set_ylabel("Value")
+axs[-1].set_xlabel(f"Embedding dim {embeddings.dim}",fontsize=11)
+plt.tight_layout()
+plt.savefig('images/embeddings_stacked.png',dpi=150)
+plt.show()
 
 ### adding the time block
 class TimeBlock(nn.Module):
