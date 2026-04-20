@@ -57,7 +57,7 @@ print(model.parameters)
 class UNet_1(nn.Module):
     def __init__(self):
         super().__init__()
-        ### Down block (Conv + ReLU)
+        ### Downsample block (Conv + ReLU)
         self.down_block_1 = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=3,stride=2,padding=1),
             nn.ReLU()
@@ -70,6 +70,7 @@ class UNet_1(nn.Module):
             nn.ConvTranspose2d(32,16,kernel_size=2,stride=2),
             nn.ReLU()
         )
+        ### upsample
 
         self.up_block_2 = nn.Sequential(
             nn.ConvTranspose2d(16,3,kernel_size=2,stride=2),
@@ -88,3 +89,5 @@ class UNet_1(nn.Module):
         blended = self.blender(concat)
         reconstruct = self.up_block_2(blended)
         return reconstruct
+
+
