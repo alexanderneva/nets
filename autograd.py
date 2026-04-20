@@ -216,3 +216,37 @@ for step in range(Nsteps):
         theta.grad.zero_()
 
 print(f"Params after {Nsteps} {theta}")
+
+### subgradient and proximal examples
+
+m, p = 1000, 10
+X = torch.randn(m,p)
+true_theta = torch.tensor([5.,-3,2.]+[0.]*7).unsqueeze(1)
+y = (torch.sigmoid(X @ true_theta) > 0.5).float()
+
+## initial guess
+theta = torch.randn(p,1,requires_grad=True)
+lr = 0.01
+l1_lambda=0.01
+tau = lr *l1_lambda
+
+def soft_threshold(v,tau):
+    return torch.sign(v)*torch.relu(torch.abs(v)-tau)
+
+print(f"Running for lambda {l1_lambda} and lr {lr}")
+for step in range(1000):
+    z = X @ theta
+    predictions = torch.sigmoid(z)
+    m = X.size(0)
+    gradient = (1/m) *X.t() @ (predictions-y)
+    ### initial smooth step
+    theta_temp = theta - lr*gradient
+    ### update weights
+    with torch.no_grad():
+        new_theta = soft_threshold(theta_temp,tau)
+        theta.copy_(new_theta)
+
+    if step % 100 == 0:
+        bce_loss = -torch.mean(y*torch.log(predictions+1e-8)+(1-y)*torch.log(1-predictions +1e-8))
+        l1_penalty = l1_lambda * torch.norm(theta,1)
+        print(f"Step {step}: Total loss = {bce_loss + l1_penalty:.4f}")
