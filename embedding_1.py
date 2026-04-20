@@ -76,6 +76,7 @@ class TimeBlock(nn.Module):
         h = h + t
         # decode back to output image size
         out = self.conv2(h)
+        #        print(f'time block shape is {out.shape}')
         return out
 
 

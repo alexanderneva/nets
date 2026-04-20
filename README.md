@@ -1,4 +1,5 @@
 Practicing neural networks
-![forward diff](forward_diff_cifar10.png)
-![sinusoidal time embeddings](embeddings_stacked.png)
-![diff pass](diff_pass.png)
+![forward diff](images/forward_diff_cifar10.png)
+![sinusoidal time embeddings](images/embeddings_stacked.png)
+![diff pass](images/diff_pass.png)
+![reverse diffusion](forward_diff_10.png)

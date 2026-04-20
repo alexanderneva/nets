@@ -84,18 +84,6 @@ transform = transforms.Compose([
 ])
 dataset = torchvision.datasets.CIFAR10(root="data/",train=True,download=False,transform=transform)
 train_loader = torch.utils.data.DataLoader(dataset,batch_size=64,shuffle=True)
-### test image 
-image_no = 37
-image, label = dataset[image_no]
-print(image.shape)
-images, labels = next(iter(train_loader))
-x_0 = image.unsqueeze(0)
-#print(f"Returning the batch dimension {x_0.shape}")
-#x_0.shape
-t = torch.randint(0,1000,size=(64,)).to(device)
-num_samples = 3
-#print(f"model shape {model(images,t).shape}")
-images= images.to(device)
 
 #model(images,t)
 ## loss and optim
@@ -131,30 +119,114 @@ import torch.optim as optim
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(),lr=0.001)
 
-epochs = 3
-print(f"Training on {device}")
+epochs = 10
+#print(f"Training on {device}")
+#
+#for epoch in range(epochs):
+#    running_loss = 0.
+#    for i, (images, _) in enumerate(train_loader,0):
+#        images = images.to(device)
+#        batch_size = images.shape[0]
+#        ### adding time at each batch member
+#        t = torch.randint(0,timesteps,(batch_size,),device=images.device).long()
+#        ### making noise
+#        noise = torch.randn_like(images)
+#        x_t=q_sample(images,t,noise=noise)
+#
+#        optimizer.zero_grad()
+#        #forward
+#        outputs = model(x_t,t)
+#        # loss
+#        loss = criterion(outputs, noise)
+#        loss.backward()
+#        # update model
+#        optimizer.step()
+#        running_loss += loss.item()
+#        if i%200 == 199:
+#            print(f'[Epoch {epoch+1}, Batch {i + 1:4d}] MSE Loss: {running_loss / 200:.4f}')
+#            running_loss =0.0
+#    print('Finished!')
+#
+#torch.save(model.state_dict(),"model_weights/diff_3_10.pt")
+## reverse process
+model = DiffUNet().to(device)
+print("Loading model")
+model.load_state_dict(torch.load("model_weights/diff_3_10.pt",weights_only=True))
+print(model)
+#dataset.data
+images, labels = next(iter(train_loader))
+model.eval()
+@torch.no_grad()
+def sample(model,image_size=32,batch_size=8,channels=3):
+    img=torch.randn((batch_size,channels,image_size,image_size),device=device)
 
-for epoch in range(epochs):
-    running_loss = 0.
-    for i, (images, _) in enumerate(train_loader,0):
-        images = images.to(device)
-        batch_size = images.shape[0]
-        ### adding time at each batch member
-        t = torch.randint(0,timesteps,(batch_size,),device=images.device).long()
-        ### making noise
-        noise = torch.randn_like(images)
-        x_t=q_sample(images,t,noise=noise)
+    ### reverse time steps
+    for i in reversed(range(timesteps)):
+        t = torch.full((batch_size,), i,device=img.device,dtype=torch.long)
+        predicted_noise=model(img,t)
+        # noise schedule for the time step
+        alpha_t = extract(alphas,t,img.shape)
+        alpha_bar_t = extract(alphas_prod,t,img.shape)
+        beta_t = extract(betas,t,img.shape)
 
-        optimizer.zero_grad()
-        #forward
-        outputs = model(x_t,t)
-        # loss
-        loss = criterion(outputs, noise)
-        loss.backward()
-        # update model
-        optimizer.step()
-        running_loss += loss.item()
-        if i%200 == 199:
-            print(f'[Epoch {epoch+1}, Batch {i + 1:4d}] MSE Loss: {running_loss / 200:.4f}')
-            running_loss =0.0
-    print('Finished!')
+        ### denoised image
+        mean = (1. /torch.sqrt(alpha_t)) *(
+            img - ((1. - alpha_t) / torch.sqrt(1.-alpha_bar_t)) * predicted_noise
+        )
+        if i > 0:
+            noise = torch.randn_like(img)
+            sigma_t = torch.sqrt(beta_t)
+            img = mean + sigma_t*noise
+        else:
+            img = mean
+    return img
+
+img = sample(model,32,64,3)
+#print(img.shape)
+#test_image = img[0:5,]
+##test_image = test_image.permute(1,2,0).cpu().numpy()
+#print(f"shape {test_image.shape}")
+##### plot image 
+#fig, axes = plt.subplots(2, 3, figsize=(15,3))
+#for i, img in enumerate(test_image):
+#    # permute the (C,H,W) torch to (H,C,C) for matplotlib
+#    img = img.permute(1,2,0)
+#    # change back to [0,1] range
+#    img = (img + 1) / 2
+#    img = torch.clamp(img,0,1)
+#    axes[i].imshow(img)
+#    axes[i].set_title(f"Step Generated Image {i}")
+#    axes[i].axis('off')
+#    fig.suptitle(f'Reverse Diffusion after {epochs} epochs ')
+#
+#plt.savefig('forward_diff_10.png',bbox_inches='tight',dpi=300)
+#print('Image saved')
+
+
+# Generate the batch
+
+# Grab the first 5 images
+test_images = img[0:5] 
+
+# Create a 1-row, 5-column grid (fits exactly 5 images)
+fig, axes = plt.subplots(1, 5, figsize=(11, 7))
+
+# Loop through our 5 images and our 5 axes simultaneously
+for i, img_tensor in enumerate(test_images):
+    # Rearrange channels for Matplotlib (C, H, W) -> (H, W, C)
+    img_format = img_tensor.permute(1, 2, 0)
+    
+    # Un-normalize from [-1, 1] back to [0, 1]
+    img_format = (img_format + 1) / 2
+    img_format = torch.clamp(img_format, 0, 1)
+    
+    # Convert safely to NumPy for Matplotlib
+    img_final = img_format.cpu().numpy()
+    
+    # Plot it!
+    axes[i].imshow(img_final)
+    axes[i].axis('off') # Hides the messy coordinates
+    fig.suptitle(f'Reverse Diffusion after {epochs} epochs ')
+plt.tight_layout()
+plt.show()
+plt.savefig('forward_diff_10.png',bbox_inches='tight',dpi=150)
