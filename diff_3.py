@@ -208,8 +208,7 @@ img = sample(model,32,64,3)
 # Grab the first 5 images
 test_images = img[0:5] 
 
-# Create a 1-row, 5-column grid (fits exactly 5 images)
-fig, axes = plt.subplots(1, 5, figsize=(11, 7))
+fig, axes = plt.subplots(1, 5, figsize=(9, 5))
 
 # Loop through our 5 images and our 5 axes simultaneously
 for i, img_tensor in enumerate(test_images):
@@ -227,6 +226,6 @@ for i, img_tensor in enumerate(test_images):
     axes[i].imshow(img_final)
     axes[i].axis('off') # Hides the messy coordinates
     fig.suptitle(f'Reverse Diffusion after {epochs} epochs ')
-plt.tight_layout()
+plt.tight_layout
+plt.savefig('images/reverse_diff_10.png',bbox_inches='tight',dpi=150)
 plt.show()
-plt.savefig('forward_diff_10.png',bbox_inches='tight',dpi=150)
