@@ -120,62 +120,67 @@ num_samples = 3
 images= images.to(device)
 
 stack = images[:num_samples]
-timesteps_to_plot = [0,250,500,750,999]
+t = torch.full((num_samples,),250,dtype=torch.long)
+t = t.to(device)
 model.eval()
-time_predictions = {}
 with torch.no_grad():
-    for t_val in timesteps_to_plot:
-        t = torch.full((num_samples,),250,dtype=torch.long)
-        t=t.to(device)
-        journey = model(stack,t)
-        time_predictions[f"step {t_val}"] = journey
+    journey = model(stack, t, debug=True)
+##timesteps_to_plot = [0,250,500,750,999]
+##model.eval()
+##time_predictions = {}
+##with torch.no_grad():
+##    for t_val in timesteps_to_plot:
+##        t = torch.full((num_samples,),250,dtype=torch.long)
+##        t=t.to(device)
+##        journey = model(stack,t)
+##        time_predictions[f"step {t_val}"] = journey
+##
+##fig, axs = plt.subplots(
+##    nrows=num_samples,
+##    ncols=len(timesteps_to_plot),
+##    figsize=(12,4),
+##    dpi=150
+##)
+##fig.suptitle("UNet over Time",fontsize=14)
+##
+##for row_idx in range(num_samples):
+##    for col_idx, (time_label,tensor_stack) in enumerate(time_predictions.items()):
+##        ax = axs[row_idx,col_idx]
+#
+#        if row_idx ==0:
+#            ax.set_title(time_label,fontsize=10)
+#        ax.axis('off')
+#        img_data = tensor_stack[row_idx]
+#        img_rgb = img_data.permute(1,2,0).cpu().numpy()
+#
+#        img_rgb = (img_rgb-img_rgb.min()) / (img_rgb.max() - img_rgb.min())
+#        ax.imshow(img_rgb)
+#plt.tight_layout()
+#plt.savefig("diff_trace.png")
+#plt.show()
 
-fig, axs = plt.subplots(
-    nrows=num_samples,
-    ncols=len(timesteps_to_plot),
-    figsize=(12,4),
-    dpi=150
-)
-fig.suptitle("UNet over Time",fontsize=14)
+fig, axs = plt.subplots(nrows=num_samples,ncols=len(journey),figsize=(12,4))
+fig.suptitle("Tracing a batch stack through the net",fontsize=13)
+
 
 for row_idx in range(num_samples):
-    for col_idx, (time_label,tensor_stack) in enumerate(time_predictions.items()):
-        ax = axs[row_idx,col_idx]
+    for col_idx, (name,tensor) in enumerate(journey.items()):
+        ax = axs[row_idx, col_idx]
 
-        if row_idx ==0:
-            ax.set_title(time_label,fontsize=10)
-        ax.axis('off')
-        img_data = tensor_stack[row_idx]
-        img_rgb = img_data.permute(1,2,0).cpu().numpy()
+        if row_idx == 0:
+            ax.set_title(name,fontsize=12)
+            ax.axis('off')
+        img_data = tensor[row_idx]
 
-        img_rgb = (img_rgb-img_rgb.min()) / (img_rgb.max() - img_rgb.min())
-        ax.imshow(img_rgb)
+        if name in ["Input","Final Output"]:
+            img_rgb = img_data.permute(1,2,0).cpu().numpy()
+            img_rgb = (img_rgb-img_rgb.min()) / (img_rgb.max() - img_rgb.min())
+            ax.imshow(img_rgb)
+        else: 
+            feature_map = img_data[0].cpu().numpy()
+            ax.imshow(feature_map, cmap='viridis')
 plt.tight_layout()
-plt.savefig("diff_trace.png")
-plt.show()
-
-#fig, axs = plt.subplots(nrows=num_samples,ncols=len(journey),figsize=(12,4))
-#fig.suptitle("Tracing a batch stack through the net",fontsize=13)
-#
-#
-#for row_idx in range(num_samples):
-#    for col_idx, (name,tensor) in enumerate(journey.items()):
-#        ax = axs[row_idx, col_idx]
-#
-#        if row_idx == 0:
-#            ax.set_title(name,fontsize=12)
-#            ax.axis('off')
-#        img_data = tensor[row_idx]
-#
-#        if name in ["Input","Final Output"]:
-#            img_rgb = img_data.permute(1,2,0).cpu().numpy()
-#            img_rgb = (img_rgb-img_rgb.min()) / (img_rgb.max() - img_rgb.min())
-#            ax.imshow(img_rgb)
-#        else: 
-#            feature_map = img_data[0].cpu().numpy()
-#            ax.imshow(feature_map, cmap='viridis')
-#plt.tight_layout()
-#plt.savefig('diff_pass.png',dpi=150)
+plt.savefig('diff_pass.png',dpi=150)
 
 #model(images,t)
 ### loss and optim
