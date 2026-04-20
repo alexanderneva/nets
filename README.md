@@ -10,3 +10,15 @@ Practicing neural networks
 [Epoch 50, Batch  600] MSE Loss: 0.0440
 ```
 ![reverse diffusion 100 epoch](images/reverse_diff_100.png)
+```{bash}
+[Epoch 99, Batch  200] MSE Loss: 0.0440
+[Epoch 99, Batch  400] MSE Loss: 0.0441
+[Epoch 99, Batch  600] MSE Loss: 0.0424
+Finished!
+[Epoch 100, Batch  200] MSE Loss: 0.0419
+[Epoch 100, Batch  400] MSE Loss: 0.0439
+[Epoch 100, Batch  600] MSE Loss: 0.0430
+
+```
+
+- loss getting stuck around 0.04
