@@ -64,22 +64,22 @@ for step in timesteps:
         x_t = q_sample(x_0,t,noise)
         noisy_images.append(x_t.squeeze(0))
 
-import matplotlib.pyplot as plt
-#### plot image 
-fig, axes = plt.subplots(1, 5, figsize=(15,3))
-for i, img, in enumerate(noisy_images):
-    # permute the (C,H,W) torch to (H,C,C) for matplotlib
-    img = img.permute(1,2,0)
-    # change back to [0,1] range
-    img = (img + 1) / 2
-    img = torch.clamp(img,0,1)
-    axes[i].imshow(img)
-    axes[i].set_title(f"Step {timesteps[i]}")
-    axes[i].axis('off')
-    fig.suptitle(f'Forward diffusion on image {image_no}')
-
-plt.savefig('forward_diff_cifar10.png',bbox_inches='tight',dpi=300)
-print('Image saved')
+#import matplotlib.pyplot as plt
+##### plot image 
+#fig, axes = plt.subplots(1, 5, figsize=(15,3))
+#for i, img, in enumerate(noisy_images):
+#    # permute the (C,H,W) torch to (H,C,C) for matplotlib
+#    img = img.permute(1,2,0)
+#    # change back to [0,1] range
+#    img = (img + 1) / 2
+#    img = torch.clamp(img,0,1)
+#    axes[i].imshow(img)
+#    axes[i].set_title(f"Step {timesteps[i]}")
+#    axes[i].axis('off')
+#    fig.suptitle(f'Forward diffusion on image {image_no}')
+#
+##plt.savefig('forward_diff_cifar10.png',bbox_inches='tight',dpi=300)
+##print('Image saved')
 
 
 print('Loading the autoencoder to train')
