@@ -9,3 +9,4 @@ Practicing neural networks
 [Epoch 50, Batch  400] MSE Loss: 0.0453
 [Epoch 50, Batch  600] MSE Loss: 0.0440
 ```
+![reverse diffusion 100 epoch](images/reverse_diff_100.png)
