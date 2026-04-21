@@ -119,9 +119,9 @@ import torch.optim as optim
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(),lr=0.001)
 
-epochs = 10
+#epochs = torch.arange(1,20)
 print(f"Training on {device}")
-
+epochs = 10
 for epoch in range(epochs):
     running_loss = 0.
     for i, (images, _) in enumerate(train_loader,0):
@@ -147,17 +147,17 @@ for epoch in range(epochs):
             running_loss =0.0
     print('Finished!')
 
-torch.save(model.state_dict(),"model_weights/diff_3_10.pt")
+torch.save(model.state_dict(),f"model_weights/diff_3_{epochs}.pt")
 ## reverse process
 model = DiffUNet().to(device)
 print("Loading model")
-model.load_state_dict(torch.load("model_weights/diff_3_10.pt",weights_only=True))
+model.load_state_dict(torch.load(f"model_weights/diff_3_{epochs}.pt",weights_only=True))
 print(model)
 #dataset.data
 images, labels = next(iter(train_loader))
 model.eval()
 @torch.no_grad()
-def sample(model,image_size=32,batch_size=8,channels=3):
+def sample(model,image_size=32,batch_size=16,channels=3):
     img=torch.randn((batch_size,channels,image_size,image_size),device=device)
 
     ### reverse time steps
@@ -227,5 +227,5 @@ for i, img_tensor in enumerate(test_images):
     axes[i].axis('off') # Hides the messy coordinates
     fig.suptitle(f'Reverse Diffusion after {epochs} epochs ')
 plt.tight_layout
-plt.savefig('images/reverse_diff_10.png',bbox_inches='tight',dpi=150)
+plt.savefig(f'images/reverse_diff_{epochs}.png',bbox_inches='tight',dpi=150)
 plt.show()
