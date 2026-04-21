@@ -101,13 +101,44 @@ num_epochs=10000
 lambda_ = 0.01
 train_lasso_logistic_regression(X,y,eta,lambda_,num_epochs)
 
+#### ADMM
 
+def w_update(X,y,w,z,u,eta,rho):
+    m = X.shape[0]
+    grad_w = (1/m)*X.T@(sigmoid(X@w)-y)+rho*(w-z+u)
+    w_new = w - eta*grad_w
+    return w_new
 
+def z_update(w,u,lambda_,rho):
+    return soft_threshold((u+w),lambda_/rho)
 
-#X = torch.randn(Nsamples,p)
-#print(f"Shape of X {X.shape}")
-#
-#def sigmoid(w):
-#    return 1/(1+torch.exp(-w))
-#
-#print(f"Shape : {sigmoid(X).shape}")
+def train_admm_lasso(X,y,eta,lambda_,rho,num_epochs):
+    p = X.shape[1]
+    w_init = np.random.uniform(size=(p,1))
+    w = w_init
+    z = w 
+    u = w-z
+    for epoch in range(num_epochs):
+        w = w_update(X,y,w,z,u,eta,rho)
+        z = z_update(w,u,lambda_,rho)
+        u = u + (w-z)
+        if epoch % 100 == 0:
+            print(f"ADMM up epoch {epoch}")
+    return z
+rho=0.4
+print(train_admm_lasso(X,y,eta,lambda_,rho,num_epochs))
+
+### pytorch
+###
+from torch import nn
+X = torch.randn(Nsamples,p)
+print(f"Shape of X {X.shape}")
+
+def sigmoid(w):
+    return 1/(1+torch.exp(-w))
+
+class Model(nn.Module):
+    def __init__(self,num_features,Nsamples):
+        super().__init__()
+        self.layer=nn.Linear(num_features,Nsamples)
+
