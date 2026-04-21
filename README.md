@@ -2,6 +2,7 @@ Practicing neural networks
 ![forward diff](images/forward_diff_cifar10.png)
 ![sinusoidal time embeddings](images/embeddings_stacked.png)
 ![diff pass](images/diff_pass.png)
+![reverse_diffusion](images/reverse_diff_5.png)
 ![reverse diffusion](images/reverse_diff_10.png)
 ![reverse diffusion 50 epoch](images/reverse_diff_50.png)
 ```{bash}
