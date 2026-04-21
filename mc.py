@@ -22,11 +22,9 @@ for i in np.linspace(-1,10,5):
     print(f'Exponential Theta mean {make_estimate_expon(N_sample).mean()}, Theta Variance {make_estimate_expon(N_sample).std()**2}')
 
 
-### random uniform
-import torch
-a=torch.randint(1,5,size=(10,10))
-print(a)
 
+
+### ridge regression
 def sigmoid(w):
     return 1 / (1 + np.exp(-w))
 
@@ -54,11 +52,54 @@ def train_ridge_logistic_regression(X, y, eta, lambda_, num_epochs):
 y = np.random.randint(0,2,size=(Nsamples,1))
 eta = 0.01
 lambda_ = 0.1
-num_epochs = 100000
+num_epochs = 10000
 weights = train_ridge_logistic_regression(X,y,eta,lambda_,num_epochs)
 print(f"final weights {weights}")
 
+zeros = np.zeros(shape=weights.shape)
+maxx = np.maximum(weights,zeros)
+print(maxx, maxx.shape)
 
+
+
+
+
+
+
+tau = 0.025
+def soft_threshold(w,tau):
+    zeros = np.zeros(shape=w.shape)
+    value = np.abs(w)-tau
+    return np.sign(w)*np.maximum(value,zeros)
+
+#print(f"Thresholded weights with tau = {tau} ", soft_threshold(weights,tau))
+
+
+
+def lasso_update(X,y,w,eta,lambda_):
+    tau = eta*lambda_
+    m = X.shape[0]
+    grad_w = (1/m)*X.T@(sigmoid(X@w)-y)
+    descent = w - eta*grad_w
+    prox = soft_threshold(descent,tau)
+    return prox
+
+print(f"Lasso update {lasso_update(X,y,weights,eta,lambda_)}")
+
+
+def train_lasso_logistic_regression(X, y, eta, lambda_, num_epochs): 
+    p = X.shape[1]
+    w_init = np.random.uniform(size=(p,1))
+    w = w_init
+    for epoch in range(num_epochs):
+        w = lasso_update(X,y,w,eta,lambda_)
+        if epoch % 1000 == 0:
+            print(f"Update {epoch} and \n weights {w}")
+    return w
+
+num_epochs=10000
+lambda_ = 0.01
+train_lasso_logistic_regression(X,y,eta,lambda_,num_epochs)
 
 
 
