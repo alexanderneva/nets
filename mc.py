@@ -130,8 +130,12 @@ print(train_admm_lasso(X,y,eta,lambda_,rho,num_epochs))
 
 ### pytorch
 ###
+import torch
 from torch import nn
-X = torch.randn(Nsamples,p)
+import pyro
+import pyro.distributions as dist
+from pyro.nn import PyroModule, PyroSample
+X_ = torch.randn(Nsamples,p)
 print(f"Shape of X {X.shape}")
 
 def sigmoid(w):
@@ -140,5 +144,42 @@ def sigmoid(w):
 class Model(nn.Module):
     def __init__(self,num_features,Nsamples):
         super().__init__()
-        self.layer=nn.Linear(num_features,Nsamples)
+        self.layer=nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(num_features,1,bias=False)
+        )
+    def forward(self,x):
+        return self.layer(x)
+
+X_ = torch.randn(Nsamples,p)
+print(f"Shape of X {X.shape}")
+y = torch.randn(Nsamples,1)
+model = Model(num_features=p,Nsamples=Nsamples)
+model.eval()
+predictions = Model(p,Nsamples)(X_)
+pyro.sample("model",dist.Bernoulli(logits=predictions),obs=y)
+weights = pyro.sample("weights",dist.Normal(loc=0,scale=1))
+print(weights)
+
+class BayesianModel(PyroModule):
+    def __init__(self, num_features):
+        super().__init__()
+        self.linear = PyroModule[nn.Linear](num_features,1,bias=False)
+        self.linear.weight = PyroSample(
+            dist.Normal(loc=0.,scale=1.).expand([1,num_features]).to_event(2)
+
+        )
+    def forward(self, x):
+        x = x.view(x.size(0),-1)
+        return self.linear(x)
+
+bayesian_model = BayesianModel(num_features=p)
+
+def model(x,y):
+    predictions = bayesian_model(x)
+    samples = pyro.sample("model",dist.Bernoulli(logits=predictions),obs=y)
+    return samples
+
+print(model(X_,y))
+
 
