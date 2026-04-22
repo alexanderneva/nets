@@ -1,5 +1,6 @@
 #https://d2l.ai/chapter_linear-regression/synthetic-regression-data.html
 import inspect
+from typing import override
 import torch
 from torch import nn
 import random
@@ -126,7 +127,7 @@ class GD(HyperParameters):
 class Trainer(HyperParameters):
     def __init__(self,max_epochs, gradient_clip_val=0):
         self.save_hyperparameters()
-        #self.max_epochs = max_epochs
+        self.max_epochs = max_epochs
         #self.gradient_clip_val = gradient_clip_val
     def prepare_data(self, data):
         self.train_dataloader = data.train_dataloader()
@@ -175,3 +176,37 @@ with torch.no_grad():
     print(f"error for bias: {data.b - model.b}")
 #optimizer = GD(model.parameters(),model.lr)
 #optimizer.step()
+
+
+### Lazy https://d2l.ai/chapter_linear-regression/linear-regression-concise.html
+
+class LinearRegression(Module):
+    def __init__(self,lr):
+        super().__init__()
+        self.save_hyperparameters()
+        self.net = nn.LazyLinear(1)
+        self.net.weight.data.normal_(0,0.01)
+        self.net.bias.data.fill_(0)
+    def forward(self, X):
+        self.net(X)
+    def loss(self,y_hat,y):
+        criterion = nn.MSELoss()
+        return criterion(y_hat,y)
+    def configure_optimizers(self):
+        return torch.optim.SGD(self.parameters(),self.lr)
+    def get_w_b(self):
+        return(self.net.weight.data, self.net.bias.data)
+
+model_2 = LinearRegression(0.01)
+model_2.eval()
+prediction=model(X)
+print(prediction)
+print(model_2.loss(prediction,y))
+
+data = SyntheticData(w=torch.tensor([2,-3.4]),b=4.2)
+trainer.fit(model_2,data)
+w,b = model_2.get_w_b()
+print(w)
+print(b)
+#print(f"Error for w: {data.w - w.reshape(data.w.shape)}")
+#print(f'Error for bias: {data.b - b}')
