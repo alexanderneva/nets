@@ -62,10 +62,6 @@ print(maxx, maxx.shape)
 
 
 
-
-
-
-
 tau = 0.025
 def soft_threshold(w,tau):
     zeros = np.zeros(shape=w.shape)
