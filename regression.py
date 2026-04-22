@@ -20,6 +20,27 @@ class HyperParameters:
                         if k not in set(ignore+['self']) and not k.startswith('_')}
         for k, v in self.hparams.items():
             setattr(self, k, v)
+class Module(nn.Module,HyperParameters):
+    def __init__(self):
+        super().__init__()
+        self.save_hyperparameters
+    def loss(self,y_hat,y):
+        raise NotImplementedError
+    def forward(self, X):
+        assert hasattr(self, 'net'), 'Neural network there'
+        return self.net(X)
+    def training_step(self,batch):
+        l = self.loss(self(*batch[:-1]), batch[-1])
+        return l
+    def validation_step(self,batch):
+        l = self.loss(self(*batch[-1]),batch[-1])
+    def configure_optimizers(self):
+        raise NotImplementedError
+    def apply_init(self, inputs, init=None):
+        self.forward(*inputs)
+        if init is not None:
+            self.net.apply(init)
+
 class DataModule(HyperParameters):
     def __init__(self, root='./data',num_workers=4):
         self.save_hyperparameters()
@@ -38,9 +59,7 @@ class DataModule(HyperParameters):
 class SyntheticData(DataModule):
     def __init__(self, w, b, noise= 0.01, num_train=1000,num_val=1000,batch_size=32):
         super().__init__()
-        self.num_train = num_train
-        self.num_val = num_val
-        self.batch_size = batch_size
+        self.save_hyperparameters()
         n = num_train + num_val
         # design matrix
         self.X = torch.randn(n,len(w))
@@ -77,12 +96,10 @@ print(len(X))
 ### Linear regression from scratch
 ### https://d2l.ai/chapter_linear-regression/linear-regression-scratch.html
 
-class LinearRegression(nn.Module):
+class LinearRegression(Module):
     def __init__(self, num_inputs, lr, sigma =0.01):
         super().__init__()
-        self.num_inputs = num_inputs
-        self.lr = lr
-        self.sigma = sigma
+        self.save_hyperparameters()
         self.w = torch.normal(0,sigma, (num_inputs, 1),requires_grad=True)
         self.b = torch.zeros(1, requires_grad=True)
     def forward(self, X):
@@ -93,14 +110,13 @@ class LinearRegression(nn.Module):
     def configure_optimizers(self):
         return GD([self.w, self.b], self.lr)
 
-class GD(torch.optim.Optimizer):
+class GD(HyperParameters):
     def __init__(self, params, lr):
-        self.params = params
-        self.lr = lr
+        self.save_hyperparameters()
     def step(self):
         for param in self.params:
             param -= self.lr*param.grad
-    def zero_grad_(self):
+    def zero_grad(self):
         for param in self.params:
             if param.grad is not None:
                 param.grad.zero_()
@@ -115,11 +131,11 @@ class Trainer(HyperParameters):
     def prepare_data(self, data):
         self.train_dataloader = data.train_dataloader()
         self.val_dataloader = data.val_dataloader()
-        self.num_train_batches = (len(self.val_dataloader)
+        self.num_train_batches = self.train_dataloader
+        self.num_val_batches = (len(list(self.val_dataloader))
                                  if self.val_dataloader is not None else 0)
     def prepare_model(self, model):
         model.trainer = self
-        model.board.xlim = [0, self.max_epochs]
         self.model = model
     def fit(self, model, data):
         self.prepare_data(data)
@@ -150,12 +166,12 @@ class Trainer(HyperParameters):
             with torch.no_grad():
                 self.model.validation_step(self.prepare_batch(batch))
             self.val_batch_idx += 1
-        raise NotImplementedError
 
 model = LinearRegression(X.shape[1],0.01)
 trainer = Trainer(max_epochs=3)
 trainer.fit(model,data)
-model.eval()
-print(model.parameters())
-optimizer = GD(model.parameters(),model.lr)
-optimizer.step()
+with torch.no_grad():
+    print(f"error for w: {data.w - model.w.reshape(data.w.shape)}")
+    print(f"error for bias: {data.b - model.b}")
+#optimizer = GD(model.parameters(),model.lr)
+#optimizer.step()
