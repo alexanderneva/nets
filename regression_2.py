@@ -62,30 +62,34 @@ p = 2
 X_, y = generate_data(n,p)
 
 
-def prediction(X,w):
-    size = X.shape[1]
-    return X@w
+def prediction(X,w,b):
+    return X@w+b
 def MSE(y,y_hat):
     return np.mean((y-y_hat)**2) / 2
-def grad_MSE(y,X,w):
-    y_hat = prediction(X,w)
+def grad_MSE_b(y,X,w,b):
+    return X@w + b - y
+def grad_MSE_w(y,X,w,b):
+    y_hat = prediction(X,w,b)
     return X.T@(y_hat-y)
-print(grad_MSE(y,X,weights))
 
 def training_L(X,y,num_epochs=100,eta=0.01):
     size=X.shape[1]
     weights = np.random.normal(size=(size,1))
+    size_bias = y.shape[0]
+    bias = np.random.normal(size=(size_bias,1))
     storage = []
     loss_storage = []
     for epoch in range(num_epochs):
         storage.append(weights)
-        loss = MSE(y,prediction(X_,weights))
+        loss = MSE(y,prediction(X_,weights,bias))
         loss_storage.append(loss)
         print(f"Epoch number {epoch}, weights {weights}")
-        weights = weights - eta*grad_MSE(y,X_,weights)
-    return storage
+        weights = weights - eta*grad_MSE_w(y,X_,weights,bias)
+        bias = bias - eta*grad_MSE_b(y,X_,weights,bias)
+    return storage, weights, bias
     
-storage = training_L(X_,y)
+storage, weights, bias = training_L(X_,y)
 storage=np.array(storage)
 storage = storage[:,:,-1]
+print(bias)
 
