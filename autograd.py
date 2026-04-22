@@ -250,3 +250,29 @@ for step in range(1000):
         bce_loss = -torch.mean(y*torch.log(predictions+1e-8)+(1-y)*torch.log(1-predictions +1e-8))
         l1_penalty = l1_lambda * torch.norm(theta,1)
         print(f"Step {step}: Total loss = {bce_loss + l1_penalty:.4f}")
+
+
+
+def softMax(x):
+    return torch.exp(x) / torch.sum(torch.exp(x))
+
+
+class CustomEntropy(torch.autograd.Function):
+
+    @staticmethod
+    def forward(ctx,logits,true_labels):
+        probabilities = softMax(logits)
+        loss = - torch.sum(true_labels * torch.log(probabilities))
+        ctx.save_for_backward(probabilities,true_labels)
+        return loss
+
+    @staticmethod
+    def backward(ctx,grad_output):
+        probabilities, true_labels = ctx.saved_tensors
+        grad_logits = (probabilities- true_labels) * grad_output
+        grad_labels = None
+        return grad_logits,grad_labels
+        pass
+
+
+ 
