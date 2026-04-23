@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import stats as stats
 import matplotlib.pyplot as plt
-def generate_data_log(n,p):
+def generate_data(n,p):
     epsilon = 0.01
     size = (n,p)
     y_size = (n,1)
@@ -9,7 +9,7 @@ def generate_data_log(n,p):
     y = np.random.randint(0,2,size=y_size)
     return x,y
 
-X, y = generate_data_log(20,2)
+X, y = generate_data(50,2)
 
 def sigmoid(x):
     return 1 / (1 +np.exp(-x))
@@ -19,8 +19,8 @@ def grad_sigmoid(x):
 
 def y_hat(X,w):
     return sigmoid(X@w)
-
-def grad_z(X):
+def grad_y_hat(X,w):
+    z = X@w
     return X.T
 
 
@@ -31,19 +31,23 @@ def grad_BCE(y,X,w):
     prediction = y_hat(X,w)
     return -X.T@(y - prediction)
 
-weights = np.random.normal(size=(X.shape[1],1))
-print(y_hat(X,weights))
+num_epochs=10
 def training(X,y,num_epochs=100,eta=0.01):
     size=X.shape[1]
     weights = np.random.normal(size=(size,1))
-    storage = []
+    weights_storage = []
+    loss_storage = []
     for epoch in range(num_epochs):
-        storage.append(weights)
-        print(f"Epoch number {epoch}, weights {weights}")
+        prediction = y_hat(X,weights)
+        weights_storage.append(weights)
+        loss = BCE(y,prediction)
+        loss_storage.append(loss)
         weights = weights - eta*grad_BCE(y,X,weights)
-    return storage
+        if epoch % 100 == 0:
+            print(f"Epoch number {epoch}, weights {weights}")
+    return weights_storage, loss_storage
     
-training(X,y)
+storage, loss_storage = training(X,y,num_epochs=num_epochs)
 
 
 ### standard lin_reg
@@ -53,11 +57,11 @@ def generate_data(n,p):
     epsilon = 0.01
     size = (n,p)
     y_size = (n,1)
-    x = np.random.normal(size=size)
+    x = np.random.normal(loc=1,scale=1,size=size)
     y = np.random.normal(0,2,size=y_size)
     return x,y
 
-n = 20
+n = 50
 p = 2
 X_, y = generate_data(n,p)
 
@@ -82,13 +86,13 @@ def training_L(X,y,num_epochs=100,eta=0.01):
         storage.append(weights)
         loss = MSE(y,prediction(X_,weights,bias))
         loss_storage.append(loss)
-        if epoch % 100 ==0:
-            print(f"Epoch number {epoch}, weights {weights}")
+        if epoch % 100 == 0 :
+            print(f"Epoch number {epoch}, weights {weights}, bias {bias[0]}")
         weights = weights - eta*grad_MSE_w(y,X_,weights,bias)
         bias = bias - eta*grad_MSE_b(y,X_,weights,bias)
-    return storage, weights, bias
+    return storage,loss_storage, weights, bias
     
-storage, weights, bias = training_L(X_,y)
+storage,loss_storage, weights, bias = training_L(X_,y,num_epochs=num_epochs)
 storage=np.array(storage)
 storage = storage[:,:,-1]
 
