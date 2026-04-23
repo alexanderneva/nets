@@ -137,43 +137,45 @@ def tanh_(x):
     return 2*sigmoid(2*x)-1
 
 def grad_tanh(x):
-    return 4*grad_sigmoid(2*x)
+    return 1-tanh_(x)**2
+
+def prediction(X,w,b):
+    return tanh_((X@w+b)/2)
 
 def change_target(y):
-    return (1 + y) / 2
+    return 2*y-1
 
-def grad_MSE_uw(y,X,w,b):
+def BCE(y,y_hat):
+    return np.mean(-(y+1)/2*np.log((y_hat+1)/2)-(1-y)/2*np.log((1-y_hat)/2))
+
+def grad_BCE_uw(y,X,w,b):
     y_hat = prediction(X,w,b)
-    u = 2*y_hat
-    return 2*X.T@grad_sigmoid(u)
+    u = y_hat
+    return 0.5*X.T@(1-y_hat*y-y*y_hat)
 
-def grad_MSE_ub(y,X,w,b):
+def grad_BCE_ub(y,X,w,b):
     y_hat = prediction(X,w,b)
-    u = 2*y_hat
-    return 2*np.sum(grad_sigmoid(u))
+    u = y_hat
+    return np.sum(1-y_hat*y-y*y_hat)*0.5
 
-w = np.random.normal(size=(2,1))
-b = np.random.normal(1)*np.ones_like(y)
-print(f"Gradient wrt w {grad_MSE_uw(y,X,w,b)}")
-print(f"Gradient wrt b {grad_MSE_ub(y,X,w,b)}")
-
+num_epochs = 5
 
 def training_Lbt(X,y,num_epochs=100,eta=0.01):
     size=X.shape[1]
     weights = np.random.normal(size=(size,1))
     bias = np.random.normal(1)*np.ones_like(y)
-    y = change_target(y)
     storage = []
     loss_storage = []
+    y = change_target(y)
     for epoch in range(num_epochs):
         storage.append(weights)
-        loss = MSE(y,tanh_(prediction(X,weights,bias)))
+        loss = BCE(change_target(y),tanh_(prediction(X,weights,bias)))
         loss_storage.append(loss)
         if epoch % 100 ==0:
-            print(f"Epoch number {epoch}, weights {weights},bias {bias[0]}")
-        weights = weights - eta*grad_MSE_uw(y,X,weights,bias)
-        bias = bias - eta*grad_MSE_ub(y,X,weights,bias)
+            print(f"Epoch number {epoch},\n weights \n {weights}, \n bias {bias[0]}")
+        weights = weights - eta*grad_BCE_uw(y,X,weights,bias)
+        bias = bias - eta*grad_BCE_ub(y,X,weights,bias)
     return storage, weights, bias
 
-storage,weights,bias = training_Lbt(X,y,num_epochs=500)
+storage,weights,bias = training_Lbt(X,y,num_epochs=num_epochs)
 
