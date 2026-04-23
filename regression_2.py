@@ -19,8 +19,8 @@ def grad_sigmoid(x):
 
 def y_hat(X,w):
     return sigmoid(X@w)
-def grad_y_hat(X,w):
-    z = X@w
+
+def grad_z(X):
     return X.T
 
 
@@ -101,3 +101,79 @@ storage = storage[:,:,-1]
 
 def y_hat_b(X,w,b):
     return sigmoid(X@w+b)
+
+
+def grad_BCE_w(y,X,w,b):
+    y_hat = prediction(X,w,b)
+    return -X.T@(y - y_hat)
+def grad_BCE_b(y,X,w,b):
+    y_hat = prediction(X,w,b)
+    return np.sum(y_hat-y)
+
+
+def training_Lb(X,y,num_epochs=100,eta=0.01):
+    size=X.shape[1]
+    weights = np.random.normal(size=(size,1))
+    bias = np.random.normal(1)*np.ones_like(y)
+    storage = []
+    loss_storage = []
+    for epoch in range(num_epochs):
+        storage.append(weights)
+        loss = BCE(y,prediction(X_,weights,bias))
+        loss_storage.append(loss)
+        if epoch % 100 ==0:
+            print(f"Epoch number {epoch}, weights {weights}")
+        weights = weights - eta*grad_BCE_w(y,X_,weights,bias)
+        bias = bias - eta*grad_BCE_b(y,X_,weights,bias)
+    return storage, weights, bias
+
+storage,weights,bias = training_Lb(X,y,eta=0.01)
+
+print(f"Bias: {bias[0]}")
+
+### hyperbolic tangent activation
+
+def tanh_(x):
+    return 2*sigmoid(2*x)-1
+
+def grad_tanh(x):
+    return 4*grad_sigmoid(2*x)
+
+def change_target(y):
+    return (1 + y) / 2
+
+def grad_MSE_uw(y,X,w,b):
+    y_hat = prediction(X,w,b)
+    u = 2*y_hat
+    return 2*X.T@grad_sigmoid(u)
+
+def grad_MSE_ub(y,X,w,b):
+    y_hat = prediction(X,w,b)
+    u = 2*y_hat
+    return 2*np.sum(grad_sigmoid(u))
+
+w = np.random.normal(size=(2,1))
+b = np.random.normal(1)*np.ones_like(y)
+print(f"Gradient wrt w {grad_MSE_uw(y,X,w,b)}")
+print(f"Gradient wrt b {grad_MSE_ub(y,X,w,b)}")
+
+
+def training_Lbt(X,y,num_epochs=100,eta=0.01):
+    size=X.shape[1]
+    weights = np.random.normal(size=(size,1))
+    bias = np.random.normal(1)*np.ones_like(y)
+    y = change_target(y)
+    storage = []
+    loss_storage = []
+    for epoch in range(num_epochs):
+        storage.append(weights)
+        loss = MSE(y,tanh_(prediction(X,weights,bias)))
+        loss_storage.append(loss)
+        if epoch % 100 ==0:
+            print(f"Epoch number {epoch}, weights {weights},bias {bias[0]}")
+        weights = weights - eta*grad_MSE_uw(y,X,weights,bias)
+        bias = bias - eta*grad_MSE_ub(y,X,weights,bias)
+    return storage, weights, bias
+
+storage,weights,bias = training_Lbt(X,y,num_epochs=500)
+
