@@ -28,7 +28,7 @@ class Neuron(object):
 #p = 3  # number of features
 #c = 2   # number of classes
 #X = np.random.normal(size=(n,p))
-#y = np.random.randint(0,5,size=(n,1))
+#y = np.random.randint(0,c,size=(n,1))
 #d_ = np.ones((n,c))
 #model = Neuron(p,c,X)
 #print("data shape",X.shape)
