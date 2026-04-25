@@ -272,7 +272,6 @@ class CustomEntropy(torch.autograd.Function):
         grad_logits = (probabilities- true_labels) * grad_output
         grad_labels = None
         return grad_logits,grad_labels
-        pass
 
 
  
