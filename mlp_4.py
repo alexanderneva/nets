@@ -23,6 +23,12 @@ class Neuron(object):
         dZ = dD*self.z*(1-self.z)
         self.dW += self.design.T@dZ
         return self.dW
+    def update(self, lr):
+        # gradient descent update
+        self.waits -= lr*self.dW
+    def zero_grad_(self):
+        # zero gradients like pytorch
+        self.dW=np.zeros_like(self.dW)
 
 #n = 10 # number of data points
 #p = 3  # number of features
