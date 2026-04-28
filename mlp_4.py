@@ -14,6 +14,12 @@ def return_labels(z):
     ### given output of sigmoid classifier, convert to 0 or 1 label
     return z.argmax(1)
 
+def relu(x):
+    if x > 0:
+        return x
+    else:
+        return 0
+
 
 
 class Neuron(object):
