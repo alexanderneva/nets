@@ -55,3 +55,59 @@ y_pred_laplacian = [naraya_predict(X_train,y_train,x_q,kernel_func=laplacian,sig
 #plt.title("Gaussian vs. laplacian kernel")
 #plt.legend("upper right")
 #plt.savefig('kr.jpg')
+
+
+def loss(y,y_hat):
+    return np.linalg.norm(y-y_hat)**2
+
+def gradient(X_train,y_train,x_q,kernel_func=rbf,sigma=1):
+    d = np.linalg.norm(X_train-x_q)**2
+    return d / sigma**3 * naraya_predict(X_train,y_train,x_q,kernel_func=kernel_func,sigma=sigma)
+
+def update(X_train,y_train,x_q,kernel_func=rbf,sigma=1,lr=0.0001):
+    weight = sigma - lr*gradient(X_train,y_train,x_q,kernel_func=kernel_func,sigma=sigma)
+    return weight
+def train(num_steps,X_batch,y_batch,X_query,sigma,lr):
+    for step in range(num_steps):
+        print("sigma update")
+        sigma=update(X_batch,y_batch,X_query,sigma=sigma,lr=lr)
+        print(update(X_batch,y_batch,X_query,sigma=sigma,lr=lr))
+    return sigma
+
+
+### split the data
+delim = X_train.shape[0] // 2
+X_batch = X_train[0:delim,]
+y_batch = y_train[0:delim,]
+print(X_batch.shape,y_batch.shape)
+x_query = X_train[delim:,]
+
+lr = 1e-6
+#sigma = np.abs(np.random.normal(1))
+#print("sigma",sigma)
+#print(update(X_batch,y_batch,X_query,sigma=sigma))
+num_steps = 10
+
+sigma = np.abs(np.random.normal(1))
+
+# plot sigma before and after training
+y_pred_gaussian_b = [naraya_predict(X_train,y_train,x_q,kernel_func=rbf,sigma=sigma) for x_q in x_query]
+plt.scatter(X_train,y_train)
+plt.plot(x_query,y_pred_gaussian_b)
+
+# tune the sigma
+sigma = train(num_steps,X_batch,y_batch,x_query,sigma,lr)
+y_pred_gaussian_a = [naraya_predict(X_train,y_train,x_q,kernel_func=rbf,sigma=sigma) for x_q in x_query]
+plt.plot(x_query,y_pred_gaussian_a)
+plt.plot(X_query,y_pred_gaussian_b)
+plt.savefig('tunesigma.jpg')
+
+
+
+
+#plt.scatter(X_train,y_train)
+#plt.plot(X_query,y_pred_gaussian)
+#plt.plot(X_query,y_pred_laplacian)
+#plt.title("Gaussian vs. laplacian kernel")
+#plt.legend("upper right")
+#plt.savefig('kr.jpg')
